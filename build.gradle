@@ -1,0 +1,74 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+// 반드시 수정 시작
+// 자바 버전
+sourceCompatibility = 1.6
+// 개발할 애플리케이션 버전
+version = '1.0'
+// 개발할 애플리케이션 명
+archivesBaseName = 'logback_example'
+// 개발할 애플리케이션 그룹명
+group = 'com.sample'
+// 반드시 수정 종료
+
+// JAVA 컴파일시 인코딩 설정
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+// 메이븐 Central 저장소 사용
+repositories {
+    mavenCentral()
+}
+
+eclipse {
+    classpath {
+       downloadSources=true
+       downloadJavadoc=true
+    }
+}
+
+
+// 의존성 설정
+dependencies {
+	// logback
+	compile 'org.slf4j:slf4j-api:1.7.7'
+	compile 'ch.qos.logback:logback-core:1.1.2'
+	compile 'ch.qos.logback:logback-classic:1.1.2'
+	
+	compile 'org.codehaus.groovy:groovy:2.3.5'
+	
+	testCompile('junit:junit:4.11')
+}
+
+// commons-logging 의존성 제거
+configurations {
+    all.collect { configuration ->
+        configuration.exclude group: 'commons-logging', module: 'commons-logging'
+        configuration.exclude group: 'log4j', module: 'log4j'
+    }
+}
+
+// TEST 설정
+test {
+    jvmArgs = ['-ea', '-Xmx256m']
+    logging.captureStandardOutput(LogLevel.INFO)
+    testReport = false
+}
+
+// 프로젝트 초기화
+// 1. java source directory 생성 : src/main/java, src/test/java
+// 2. resource directory 생성    : src/main/resource, src/test/resource
+task initProject(description: 'initialize project') << {
+    createDir = {
+        println "create source directory: $it"
+        it.mkdirs()
+    }
+    sourceSets*.java.srcDirs*.each createDir
+    sourceSets*.resources.srcDirs*.each createDir
+}
+
+eclipseJdt << {
+    File f = file('.settings/org.eclipse.core.resources.prefs')
+    f.write('eclipse.preferences.version=1\n')
+    f.append('encoding/<project>=UTF-8')
+}
